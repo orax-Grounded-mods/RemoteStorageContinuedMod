@@ -1,0 +1,12 @@
+{
+    "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+    "diagnostics.globals": [
+        "ModRef",
+        "TestsMod"
+    ],
+    "workspace.library": [
+        "../shared"
+    ],
+    "workspace.maxPreload": 50000,
+    "workspace.preloadFileSize": 5000
+}

@@ -1,0 +1,99 @@
+name: Create a release
+
+env:
+  RELEASE_DIR: .RELEASE
+  DOTNET_VERSION: 7.x
+  HASH_ALGORITHM: SHA-256
+
+on:
+  push:
+    tags: 'v[0-9]+.[0-9]+.[0-9]+**'
+  workflow_dispatch:
+    inputs:
+      isDraft:
+        type: boolean
+        default: true
+        description: 'Create a draft'
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  main-job:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Checkout lua-mods-libs
+      uses: actions/checkout@v4 
+      with:
+        repository: 0-F/lua-mods-libs
+        sparse-checkout: |
+          logging.lua
+        sparse-checkout-cone-mode: false
+        path: .lib/lua-mods-libs
+
+    - name: Checkout GroundedHelpers
+      uses: actions/checkout@v4 
+      with:
+        repository: orax-Grounded-mods/GroundedHelpers
+        sparse-checkout: |
+          GroundedHelpers.lua
+        sparse-checkout-cone-mode: false
+        path: .lib/GroundedHelpers
+
+    - name: Set environment variables
+      run: |
+        $name = Split-Path -Path (Get-Location) -Leaf
+        $version = '${{ github.ref_name }}' -replace '^v(?=\d+\.\d+\.\d+)', ''
+        $releaseFilename = $name + ".zip"
+        "NAME=$name" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "RELEASE_FILENAME=$releaseFilename" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Copy files
+      run: |
+        dir
+        $name = '${{ env.NAME }}'
+        $releaseDir = '${{ env.RELEASE_DIR }}'
+        $version = '${{ env.VERSION }}'
+        $targetDir = "$releaseDir\$name"
+        $scriptsDir = "$targetDir\Scripts"
+        New-Item -Path . -Name $scriptsDir -ItemType 'directory'
+        New-Item -Path . -Name "$targetDir\enabled.txt" -ItemType 'file'
+        New-Item -Path "$targetDir" -Name "version.txt" -ItemType "file" -Value $version
+        Move-Item -Path @('.luarc.json', 'options.example.lua') -Destination "$targetDir"
+        Move-Item -Path @('Scripts\main.lua') -Destination "$targetDir\Scripts"
+        Move-Item -Path .lib -Destination "$scriptsDir\lib"
+
+    - name: Create ZIP archive
+      run: |
+        $name = '${{ env.NAME }}'
+        $releaseDir = '${{ env.RELEASE_DIR }}'
+        $releaseFilename = '${{ env.RELEASE_FILENAME }}'
+        Compress-Archive -Path "$releaseDir\$name" -DestinationPath "$releaseDir\$releaseFilename"
+
+    - name: Hash file
+      run: |
+        $hash = (Get-FileHash -Algorithm ('${{ env.HASH_ALGORITHM }}' -replace '-','') `
+          -Path ${{ env.RELEASE_DIR }}\${{ env.RELEASE_FILENAME }}).Hash
+        "HASH=$hash" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: GH Release
+      uses: softprops/action-gh-release@v2.0.4
+      with:
+        files: |
+          ${{ env.RELEASE_DIR }}/${{ env.RELEASE_FILENAME }}
+        draft: ${{ inputs.isDraft == true && true || false }}
+        append_body: true
+        body: |
+          ```
+          VERSION: ${{ env.VERSION }}
+          SHA-256: ${{ env.HASH }}
+          ```
