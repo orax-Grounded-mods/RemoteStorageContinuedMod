@@ -280,7 +280,7 @@ local function OpenStorageEvent()
     return
   end
 
-  OpenStorage()
+  ExecuteInGameThread(OpenStorage)
 end
 
 local function Init()
