@@ -4,13 +4,13 @@ MIN_LEVEL_OF_FATAL_ERROR = "ERROR" ---@type _LogLevel
 ---@type Mod_ModInfo
 local modInfo = (function()
   local info = debug.getinfo(2, "S")
-  local source = info.source
+  local source = info.source:gsub("\\", "/")
   return {
-    name = source:match("@?.+\\Mods\\([^\\]+)"),
+    name = source:match("@?.+/Mods/([^/]+)"),
     file = source:sub(2),
-    currentDirectory = source:match("@?(.+)\\"),
-    currentModDirectory = source:match("@?(.+\\Mods\\[^\\]+)"),
-    modsDirectory = source:match("@?(.+\\Mods)\\")
+    currentDirectory = source:match("@?(.+)/"),
+    currentModDirectory = source:match("@?(.+/Mods/[^/]+)"),
+    modsDirectory = source:match("@?(.+/Mods)/")
   }
 end)()
 
@@ -29,7 +29,7 @@ end
 ---@param filename string
 ---@return boolean
 local function isSharedFileExists(filename)
-  if isFileExists(modInfo.modsDirectory .. "\\shared\\" .. filename) then
+  if isFileExists(modInfo.modsDirectory .. "/shared/" .. filename) then
     return true
   else
     print(string.format("Shared file not found: %s.\n", filename))
