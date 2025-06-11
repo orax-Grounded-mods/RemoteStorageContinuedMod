@@ -71,7 +71,7 @@ loadOptions()
 local ueHelpers = require("UEHelpers")
 local logging = isSharedFileExists([[lua-mods-libs\logging.lua]]) and
     require("lua-mods-libs.logging") or
-    require("lib.lua-mods-libs.logging")
+    require("Scripts.lib.lua-mods-libs.logging")
 local groundedHelpers = isSharedFileExists([[GroundedHelpers\GroundedHelpers.lua]]) and
     require("GroundedHelpers.GroundedHelpers") or
     require("lib.GroundedHelpers.GroundedHelpers")
