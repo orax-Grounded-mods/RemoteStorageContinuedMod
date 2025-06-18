@@ -74,7 +74,7 @@ local logging = isSharedFileExists([[lua-mods-libs\logging.lua]]) and
     require("Scripts.lib.lua-mods-libs.logging")
 local groundedHelpers = isSharedFileExists([[GroundedHelpers\GroundedHelpers.lua]]) and
     require("GroundedHelpers.GroundedHelpers") or
-    require("lib.GroundedHelpers.GroundedHelpers")
+    require("Scripts.lib.GroundedHelpers.GroundedHelpers")
 
 local log = logging.new(LOG_LEVEL, MIN_LEVEL_OF_FATAL_ERROR)
 
